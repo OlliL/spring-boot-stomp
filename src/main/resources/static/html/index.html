@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<script src="node_modules/webstomp-client/dist/webstomp.js"></script>
+<script>
+var baseUrl = "http://" + document.location.host;
+var jwtToken;
+var csrfToken;
+
+async function login() {
+	document.getElementById('loginStatus').innerText = "";
+	document.getElementById('jwtToken').innerText = "";
+	
+	tokenResponse = await fetch(baseUrl+"/api/login",{
+                                    credentials: "include",
+                                   });
+	json = await tokenResponse.json();
+	jwtToken = json.token;
+	
+	document.getElementById('loginStatus').innerText = "HTTP Status: "+ tokenResponse.status;
+	document.getElementById('jwtToken').innerText = jwtToken;
+}
+
+async function getCsrf() {
+	document.getElementById('csrfStatus').innerText = "";
+	document.getElementById('csrfToken').innerText = "";
+	
+	tokenResponse = await fetch(baseUrl+"/api/csrf",{
+                                    credentials: "include",
+                                   });
+	json = await tokenResponse.json();
+	csrfToken = json.token;
+	
+	document.getElementById('csrfStatus').innerText = "HTTP Status: "+ tokenResponse.status;
+	document.getElementById('csrfToken').innerText = csrfToken;
+}
+
+async function testSecured() {
+	document.getElementById('securedStatus').innerText = "";
+	document.getElementById('securedTest').innerText = "";
+	
+	const headers = {
+			  'Authorization': 'Bearer ' + jwtToken,
+			  'X-CSRF-TOKEN': csrfToken,
+			};
+	
+	tokenResponse = await fetch(baseUrl+"/secured/test",{
+                                    credentials: "include",
+                                    headers: headers,
+                                    method: "POST",
+                                   });
+	json = await tokenResponse.json();
+
+	document.getElementById('securedStatus').innerText = "HTTP Status: "+ tokenResponse.status;
+	document.getElementById('securedTest').innerText = json.text;
+}
+async function testSecuredNoAuthNoCsrf() {
+	document.getElementById('websocketStatus').innerText = "";
+	
+	const headers = {
+			};
+	
+	tokenResponse = await fetch(baseUrl+"/secured/test",{
+                                    credentials: "include",
+                                    headers: headers,
+                                    method: "POST",
+                                   });
+	
+	document.getElementById('securedStatusNoAuthNoCsrf').innerText = "HTTP Status: "+ tokenResponse.status;
+}
+async function testSecuredNoCsrf() {
+	document.getElementById('securedStatusNoCsrf').innerText = "";
+	
+	const headers = {
+			  'Authorization': 'Bearer ' + jwtToken,
+			};
+	
+	tokenResponse = await fetch(baseUrl+"/secured/test",{
+                                    credentials: "include",
+                                    headers: headers,
+                                    method: "POST",
+                                   });
+	document.getElementById('securedStatusNoCsrf').innerText = "HTTP Status: "+ tokenResponse.status;
+}
+
+async function connectWebsocket() {
+	document.getElementById('websocketStatus').innerText = "";
+	
+	const headers = {
+			  'Authorization': 'Bearer ' + jwtToken,
+			  'X-CSRF-TOKEN': csrfToken,
+			};
+
+	var ws = new WebSocket("ws://"+document.location.host+"/websocket");
+
+	var stompClient = webstomp.over(ws, {
+	      debug: true,
+	      protocols: webstomp.VERSIONS.supportedProtocols(),
+	    });
+
+	stompClient.connect(headers,
+	    /*connectCallback*/
+	    (frame) => {document.getElementById('websocketStatus').innerText = "connected"},
+	    /*errorCallback*/
+	    (frame) => {document.getElementById('websocketStatus').innerText = "error"}
+	);
+}
+function alertToken() {
+	alert(token);
+}
+
+</script>
+</head>
+<body>
+<table>
+<tr>
+<td><button onclick="login()">get JWT Token</button></td>
+<td><font id="loginStatus"></font></td>
+</tr>
+<tr>
+<td><button onclick="getCsrf()">get CSRF Token</button></td>
+<td><font id="csrfStatus"></font></td>
+</tr>
+
+</table>
+
+<br>
+<table border="1" width="100%">
+<tr>
+<td width="7%">JWT Token</td>
+<td><p id="jwtToken"></p></td>
+</tr>
+<tr>
+<td width="7%">CSRF Token</td>
+<td><p id="csrfToken"></p></td>
+</tr>
+</table>
+
+	<table>
+		<tr>
+			<td><button onclick="testSecuredNoAuthNoCsrf()">test secured omit JWT, CSRF</button></td>
+			<td><font id="securedStatusNoAuthNoCsrf"></font></td>
+		</tr>
+		<tr>
+			<td><button onclick="testSecuredNoCsrf()">test secured omit CSRF</button></td>
+			<td><font id="securedStatusNoCsrf"></font></td>
+		</tr>
+		<tr>
+			<td><button onclick="testSecured()">test secured</button></td>
+			<td><font id="securedStatus"></font></td>
+		</tr>
+	</table>
+	
+	<table border="1" width="100%">
+		<tr>
+			<td width="7%">Response</td>
+			<td><p id="securedTest"></p></td>
+		</tr>
+	</table>
+ 	<table>
+		<tr>
+			<td><button onclick="connectWebsocket()">connect websocket</button></td>
+			<td><font id="websocketStatus"></font></td>
+		</tr>
+	</table>
+</body>
+</html>
