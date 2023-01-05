@@ -13,3 +13,6 @@ Without them CSRF does not work.
 
 ## Configuration
 To disable CSRF at all just specify websocket.csrf.enable=0 in application.properties
+
+## STOMP Client Implementation
+- [webstomp-client](https://github.com/JSteunou/webstomp-client) 1.2.6 is used and delivered within the repository (no npm install required)
