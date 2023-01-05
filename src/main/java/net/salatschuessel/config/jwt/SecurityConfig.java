@@ -4,6 +4,7 @@ package net.salatschuessel.config.jwt;
 import java.util.Arrays;
 import java.util.Collections;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -21,6 +22,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
   @Autowired
   JwtTokenProvider jwtTokenProvider;
+  @Value("${websocket.csrf.enable}")
+  int websocketCsrfEnable;
 
   @Bean
   public AuthenticationManager authenticationManager(
@@ -42,20 +45,19 @@ public class SecurityConfig {
 
   @Bean
   public SecurityFilterChain securityFilterChain(final HttpSecurity http) throws Exception {
-    final CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
-    // FIXME: Fix for spring-security/issues/12378
-    requestHandler.setCsrfRequestAttributeName(null);
-
     //@formatter:off
     http
         .httpBasic().disable()
         .cors().and()
-
         .csrf(configurer -> {
            // FIXME: Fix for spring-security/issues/12378
-           configurer.csrfTokenRequestHandler(requestHandler);
+          if (this.websocketCsrfEnable == 1) {
+            final CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
+            requestHandler.setCsrfRequestAttributeName(null);
+            configurer.csrfTokenRequestHandler(requestHandler);
+          }
+
       })
-//        .csrf().and()
         .headers()
         .and()
         .apply(new JwtConfigurer(this.jwtTokenProvider))
