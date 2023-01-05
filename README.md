@@ -1,4 +1,5 @@
 ## How To Use it
+![Screenshot](https://github.com/OlliL/spring-boot-stomp/raw/main/HTML_page.JPG)
 - Start net.salatschuessel.Myserver
 - Navigate to [http://localhost:8080/html/index.html](http://localhost:8080/html/index.html)
 - Click Button [get JWT Token]
