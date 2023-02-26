@@ -25,12 +25,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
   @Override
   public void registerStompEndpoints(final StompEndpointRegistry registry) {
-    // ...
-    registry.addEndpoint("/websocket")
-        // FIXME: Fix for spring-security/issues/12378
-        // can be used instead of requestHandler.setCsrfRequestAttributeName(null);
-        // .addInterceptors(new EagerCsrfTokenHandshakeInterceptor())
-        .setAllowedOrigins("*");
+    registry.addEndpoint("/websocket").setAllowedOrigins("*");
   }
 
   @Override
